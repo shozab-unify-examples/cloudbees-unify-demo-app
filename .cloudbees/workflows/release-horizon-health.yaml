@@ -15,7 +15,7 @@ on:
     inputs:
       manifest:
         type: string
-        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}}}'
+        default: '{"cloudbees-unify-demo-kit":{"deploy":true,"orders-api":{"deploy":true,"name":"orders-api","version":"1.4.9","url":"docker.io/cloudbeesdemo/orders-api:1.4.9"}}}'
       clinical_system:
         type: choice
         options:
