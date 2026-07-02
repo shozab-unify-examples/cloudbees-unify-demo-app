@@ -16,7 +16,7 @@ on:
     inputs:
       manifest:
         type: string
-        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}},"payments-api":{"payments-api":{"deploy":true,"id":"payments-api:2.8.1"}},"web-frontend":{"web-frontend":{"deploy":true,"id":"web-frontend:3.2.0"}}}'
+        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}}}'
       change_ticket:
         type: string
         default: CHG-10482

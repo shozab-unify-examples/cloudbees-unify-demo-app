@@ -4,9 +4,8 @@ name: horizon-health-standard-release
 
 # Standardized "golden path" release orchestration for Horizon Health — a STAGED workflow.
 # Deploy stages map to environments and call the reusable deployer, which
-# simulates deploying each component. Non-deploy jobs run mock steps and
-# publish evidence. In this scenario payments-api is intentionally NOT deployed
-# (manifest deploy=false), so the deployer skips it.
+# simulates deploying the component. Non-deploy jobs run mock steps and
+# publish evidence.
 #
 # Setup in CloudBees Unify: the target environments (qa, staging) must exist
 # and be associated with the application. Deploys are simulated (no real cluster).
@@ -16,7 +15,7 @@ on:
     inputs:
       manifest:
         type: string
-        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}},"payments-api":{"payments-api":{"deploy":false,"id":"payments-api:2.8.1"}},"web-frontend":{"web-frontend":{"deploy":true,"id":"web-frontend:3.2.0"}}}'
+        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}}}'
       clinical_system:
         type: choice
         options:

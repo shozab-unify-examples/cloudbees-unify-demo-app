@@ -6,13 +6,8 @@ jira:
       summary: Add order status API endpoint
       status: Done
       component: orders-api
-    - key: CP-1848
-      type: Story
-      summary: Improve patient portal order history page
-      status: Done
-      component: web-frontend
     - key: CP-1851
       type: Bug
-      summary: Fix retry logic for payment status lookup
+      summary: Fix retry logic for order status lookup
       status: Done
-      component: payments-api
+      component: orders-api

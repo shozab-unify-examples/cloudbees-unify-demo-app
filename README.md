@@ -12,7 +12,7 @@ It is intentionally **separate from the component repository**, because in Cloud
 ## Workflows
 
 - `.cloudbees/workflows/release-finsure-bank.yaml` — **FinSure Bank**, regulated financial services. Staged: governance → **staging** → validation → production approval → **prod** → evidence.
-- `.cloudbees/workflows/release-horizon-health.yaml` — **Horizon Health Systems**, healthcare / platform engineering. Staged: golden-path → **qa** → validation → **staging** → summary. (`payments-api` is intentionally not deployed.)
+- `.cloudbees/workflows/release-horizon-health.yaml` — **Horizon Health Systems**, healthcare / platform engineering. Staged: golden-path → **qa** → validation → **staging** → summary.
 - `.cloudbees/workflows/deployer.yaml` — reusable deployer. For each component in the manifest, it calls that component's simulated `deploy.yaml` (cross-repo). The deploy stages in the release workflows call this deployer per environment.
 
 ## Setup required

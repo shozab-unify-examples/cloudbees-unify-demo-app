@@ -6,12 +6,6 @@ components:
   orders-api:
     version: orders-api:1.4.0
     deploy: true
-  payments-api:
-    version: payments-api:2.8.1
-    deploy: false
-  web-frontend:
-    version: web-frontend:3.2.0
-    deploy: true
 requiredEvidence:
   - unit-tests
   - targeted-regression

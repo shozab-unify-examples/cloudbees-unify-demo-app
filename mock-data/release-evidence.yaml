@@ -8,12 +8,6 @@ evidence:
       deployedTo:
         - staging
         - prod
-    - name: web-frontend
-      version: 3.2.0
-      ciStatus: passed
-      securityStatus: passed
-      deployedTo:
-        - staging
   approvals:
     - group: release-management
       status: approved
