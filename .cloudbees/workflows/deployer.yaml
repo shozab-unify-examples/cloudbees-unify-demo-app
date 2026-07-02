@@ -1,0 +1,44 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: deployer
+
+# Reusable application deployer, called by the staged release workflows.
+# For each component it decides (from the manifest) whether to deploy, then
+# calls that component's simulated deploy workflow in the COMPONENT repo.
+#
+# NOTE: cross-repo reusable-workflow references use owner/repo/path@ref.
+# All three components point at the single demo component repo's simulated
+# deploy.yaml for the demo. In a real application each would point at its own
+# component repo. If your org requires a different ref, change @main.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      manifest:
+        type: string
+        required: true
+
+jobs:
+  orders-api:
+    if: ${{ fromJSON(inputs.manifest)['orders-api']['orders-api'].deploy }}
+    uses: cb-demos/cloudbees-unify-demo-kit/.cloudbees/workflows/deploy.yaml@main
+    with:
+      artifact-id: ${{ fromJSON(inputs.manifest)['orders-api']['orders-api'].id }}
+      environment: ${{ inputs.environment }}
+
+  payments-api:
+    if: ${{ fromJSON(inputs.manifest)['payments-api']['payments-api'].deploy }}
+    uses: cb-demos/cloudbees-unify-demo-kit/.cloudbees/workflows/deploy.yaml@main
+    with:
+      artifact-id: ${{ fromJSON(inputs.manifest)['payments-api']['payments-api'].id }}
+      environment: ${{ inputs.environment }}
+
+  web-frontend:
+    if: ${{ fromJSON(inputs.manifest)['web-frontend']['web-frontend'].deploy }}
+    uses: cb-demos/cloudbees-unify-demo-kit/.cloudbees/workflows/deploy.yaml@main
+    with:
+      artifact-id: ${{ fromJSON(inputs.manifest)['web-frontend']['web-frontend'].id }}
+      environment: ${{ inputs.environment }}

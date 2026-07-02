@@ -2,16 +2,21 @@ apiVersion: automation.cloudbees.io/v1alpha1
 kind: workflow
 name: finsure-bank-regulated-release
 
-# Regulated, governed release orchestration demo for FinSure Bank.
-# Lives in the APPLICATION repo (separate from the component/CI repo).
-# Fully self-contained: every step is mock/echo and each job publishes a
-# Markdown evidence item to the run's Evidence tab. Runs green in any
-# CloudBees Unify org with no clusters, secrets, or integrations required.
-# Story: governance -> staging -> validation -> approval -> production -> evidence.
+# Regulated release orchestration for FinSure Bank — a STAGED workflow.
+# Deploy stages map to environments and call the reusable deployer, which
+# simulates deploying each component. Governance/validation/approval/evidence
+# jobs run mock steps and publish evidence to the run's Evidence tab.
+#
+# Setup in CloudBees Unify: the target environments (staging, prod) must exist
+# and be associated with the application, and the component must be part of the
+# application. Deploys are simulated (no real cluster).
 
 on:
   workflow_dispatch:
     inputs:
+      manifest:
+        type: string
+        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}},"payments-api":{"payments-api":{"deploy":true,"id":"payments-api:2.8.1"}},"web-frontend":{"web-frontend":{"deploy":true,"id":"web-frontend:3.2.0"}}}'
       change_ticket:
         type: string
         default: CHG-10482
@@ -29,7 +34,6 @@ jobs:
           echo "== FinSure Bank governance review =="
           echo "Change ticket:  ${{ inputs.change_ticket }}"
           echo "Release window: ${{ inputs.release_window }}"
-          echo "Components:      orders-api:1.4.0, payments-api:2.8.1, web-frontend:3.2.0"
           echo "Verifying unit tests, security scans, and approvals..."
           echo "Audit evidence: COMPLETE"
       - name: Publish evidence
@@ -39,33 +43,17 @@ jobs:
             ## Governance review — FinSure Bank
             - Change ticket: ${{ inputs.change_ticket }}
             - Release window: ${{ inputs.release_window }}
-            - Components: orders-api:1.4.0, payments-api:2.8.1, web-frontend:3.2.0
             - Unit tests / security scans / approvals: verified
             - Audit evidence: **complete**
 
   deploy-staging:
     needs:
       - governance-review
-    steps:
-      - name: Deploy release to staging
-        uses: docker://alpine:3.20
-        shell: sh
-        run: |
-          echo "Deploying FinSure Bank release to STAGING"
-          for component in orders-api:1.4.0 payments-api:2.8.1 web-frontend:3.2.0; do
-            echo "  -> deploying $component"
-          done
-          echo "Staging deployment: SUCCESS"
-      - name: Publish evidence
-        uses: https://github.com/cloudbees-io/publish-evidence-item@v1
-        with:
-          content: |-
-            ## Staging deployment
-            - Environment: staging
-            - orders-api:1.4.0 — deployed
-            - payments-api:2.8.1 — deployed
-            - web-frontend:3.2.0 — deployed
-            - Status: **success**
+    environment: staging
+    uses: ./.cloudbees/workflows/deployer.yaml
+    with:
+      manifest: ${{ inputs.manifest }}
+      environment: ${{ job.environment }}
 
   staging-validation:
     needs:
@@ -112,26 +100,11 @@ jobs:
   deploy-production:
     needs:
       - production-approval
-    steps:
-      - name: Deploy release to production
-        uses: docker://alpine:3.20
-        shell: sh
-        run: |
-          echo "Deploying FinSure Bank release to PRODUCTION"
-          for component in orders-api:1.4.0 payments-api:2.8.1 web-frontend:3.2.0; do
-            echo "  -> deploying $component"
-          done
-          echo "Production deployment: SUCCESS"
-      - name: Publish evidence
-        uses: https://github.com/cloudbees-io/publish-evidence-item@v1
-        with:
-          content: |-
-            ## Production deployment
-            - Environment: production
-            - orders-api:1.4.0 — deployed
-            - payments-api:2.8.1 — deployed
-            - web-frontend:3.2.0 — deployed
-            - Status: **success**
+    environment: prod
+    uses: ./.cloudbees/workflows/deployer.yaml
+    with:
+      manifest: ${{ inputs.manifest }}
+      environment: ${{ job.environment }}
 
   release-evidence:
     needs:
@@ -142,10 +115,6 @@ jobs:
         shell: sh
         run: |
           echo "== Release evidence package =="
-          echo "Unit tests:    passed"
-          echo "Security scan: passed"
-          echo "Approvals:     complete"
-          echo "Deployments:   staging + production"
           echo "Change ticket: ${{ inputs.change_ticket }}"
           echo "Release COMPLETE for FinSure Bank"
       - name: Publish evidence

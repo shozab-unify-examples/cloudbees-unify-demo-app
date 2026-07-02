@@ -2,17 +2,21 @@ apiVersion: automation.cloudbees.io/v1alpha1
 kind: workflow
 name: horizon-health-standard-release
 
-# Standardized "golden path" release orchestration demo for Horizon Health Systems.
-# Lives in the APPLICATION repo (separate from the component/CI repo).
-# Fully self-contained: every step is mock/echo and each job publishes a
-# Markdown evidence item to the run's Evidence tab. Runs green in any
-# CloudBees Unify org with no clusters, secrets, or integrations required.
-# Story: golden-path check -> QA -> automated validation -> staging -> summary.
-# Note: for this scenario payments-api is intentionally NOT deployed.
+# Standardized "golden path" release orchestration for Horizon Health — a STAGED workflow.
+# Deploy stages map to environments and call the reusable deployer, which
+# simulates deploying each component. Non-deploy jobs run mock steps and
+# publish evidence. In this scenario payments-api is intentionally NOT deployed
+# (manifest deploy=false), so the deployer skips it.
+#
+# Setup in CloudBees Unify: the target environments (qa, staging) must exist
+# and be associated with the application. Deploys are simulated (no real cluster).
 
 on:
   workflow_dispatch:
     inputs:
+      manifest:
+        type: string
+        default: '{"orders-api":{"orders-api":{"deploy":true,"id":"orders-api:1.4.0"}},"payments-api":{"payments-api":{"deploy":false,"id":"payments-api:2.8.1"}},"web-frontend":{"web-frontend":{"deploy":true,"id":"web-frontend:3.2.0"}}}'
       clinical_system:
         type: choice
         options:
@@ -30,7 +34,6 @@ jobs:
         run: |
           echo "== Horizon Health standard release path =="
           echo "Clinical system: ${{ inputs.clinical_system }}"
-          echo "Components:      orders-api:1.4.0, web-frontend:3.2.0 (payments-api: not deployed)"
           echo "Checking reusable platform-workflow adoption..."
           echo "Checking required health-data governance controls..."
           echo "Golden path: VALIDATED"
@@ -40,7 +43,6 @@ jobs:
           content: |-
             ## Golden-path validation — Horizon Health
             - Clinical system: ${{ inputs.clinical_system }}
-            - Components: orders-api:1.4.0, web-frontend:3.2.0 (payments-api not deployed)
             - Reusable platform-workflow adoption: confirmed
             - Health-data governance controls: present
             - Status: **validated**
@@ -48,25 +50,11 @@ jobs:
   deploy-qa:
     needs:
       - platform-golden-path
-    steps:
-      - name: Deploy release to QA
-        uses: docker://alpine:3.20
-        shell: sh
-        run: |
-          echo "Deploying Horizon Health release to QA"
-          for component in orders-api:1.4.0 web-frontend:3.2.0; do
-            echo "  -> deploying $component"
-          done
-          echo "QA deployment: SUCCESS"
-      - name: Publish evidence
-        uses: https://github.com/cloudbees-io/publish-evidence-item@v1
-        with:
-          content: |-
-            ## QA deployment
-            - Environment: qa
-            - orders-api:1.4.0 — deployed
-            - web-frontend:3.2.0 — deployed
-            - Status: **success**
+    environment: qa
+    uses: ./.cloudbees/workflows/deployer.yaml
+    with:
+      manifest: ${{ inputs.manifest }}
+      environment: ${{ job.environment }}
 
   automated-validation:
     needs:
@@ -93,25 +81,11 @@ jobs:
   deploy-staging:
     needs:
       - automated-validation
-    steps:
-      - name: Deploy release to staging
-        uses: docker://alpine:3.20
-        shell: sh
-        run: |
-          echo "Deploying Horizon Health release to STAGING"
-          for component in orders-api:1.4.0 web-frontend:3.2.0; do
-            echo "  -> deploying $component"
-          done
-          echo "Staging deployment: SUCCESS"
-      - name: Publish evidence
-        uses: https://github.com/cloudbees-io/publish-evidence-item@v1
-        with:
-          content: |-
-            ## Staging deployment
-            - Environment: staging
-            - orders-api:1.4.0 — deployed
-            - web-frontend:3.2.0 — deployed
-            - Status: **success**
+    environment: staging
+    uses: ./.cloudbees/workflows/deployer.yaml
+    with:
+      manifest: ${{ inputs.manifest }}
+      environment: ${{ job.environment }}
 
   release-summary:
     needs:
