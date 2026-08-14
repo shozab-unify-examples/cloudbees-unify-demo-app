@@ -1,16 +1,6 @@
 apiVersion: automation.cloudbees.io/v1alpha1
 kind: workflow
 name: finsure-bank-regulated-release
-
-# Regulated release orchestration for FinSure Bank — a STAGED workflow.
-# Deploy stages map to environments and call the reusable deployer, which
-# simulates deploying each component. Governance/validation/approval/evidence
-# jobs run mock steps and publish evidence to the run's Evidence tab.
-#
-# Setup in CloudBees Unify: the target environments (staging, prod) must exist
-# and be associated with the application, and the component must be part of the
-# application. Deploys are simulated (no real cluster).
-
 on:
   workflow_dispatch:
     inputs:
@@ -23,7 +13,6 @@ on:
       release_window:
         type: string
         default: Saturday 22:00-23:00 ET
-
 metadata:
   stages/v1alpha1:
     - name: Governance
@@ -42,7 +31,6 @@ metadata:
     - name: Post-Release
       jobs:
         - release-evidence
-
 jobs:
   governance-review:
     steps:
@@ -64,23 +52,22 @@ jobs:
             - Release window: ${{ inputs.release_window }}
             - Unit tests / security scans / approvals: verified
             - Audit evidence: **complete**
-
       - name: Evaluate production coverage policy
         uses: docker://alpine:3.20
         id: coverage-policy
         run: |
           set -e
-  
+
           ACTUAL_COVERAGE="87.4"
           REQUIRED_COVERAGE="${{ vars.MIN_PROD_COVERAGE }}"
-  
+
           echo "========================================"
           echo "Production Test Coverage Policy"
           echo "========================================"
           echo "Actual coverage:   ${ACTUAL_COVERAGE}%"
           echo "Required coverage: ${REQUIRED_COVERAGE}%"
           echo
-  
+
           if awk "BEGIN {exit !(${ACTUAL_COVERAGE} >= ${REQUIRED_COVERAGE})}"; then
             echo "POLICY RESULT: PASS"
           else
@@ -90,25 +77,23 @@ jobs:
             echo "Coverage ${ACTUAL_COVERAGE}% is below the required ${REQUIRED_COVERAGE}%."
             exit 1
           fi
-
       - name: Publish production coverage policy evidence
         uses: cloudbees-io/publish-evidence-item@v1
         with:
           content: |-
             # Production Coverage Policy
-  
+
             **Policy:** Minimum test coverage for Production
-  
+
             - **Required coverage:** `${{ vars.MIN_PROD_COVERAGE }}%`
             - **Actual coverage:** `87.4%`
             - **Result:** `PASS`
             - **Enforcement:** `BLOCK`
             - **Target:** `Production`
-  
+
             The release met the centrally configured Production
             coverage requirement and is eligible to continue.
-          format: MARKDOWN            
-
+          format: MARKDOWN
   deploy-staging:
     needs:
       - governance-review
@@ -117,7 +102,6 @@ jobs:
     with:
       manifest: ${{ inputs.manifest }}
       environment: ${{ job.environment }}
-
   staging-validation:
     needs:
       - deploy-staging
@@ -139,7 +123,6 @@ jobs:
             - SLO dashboards: within thresholds
             - Audit controls: validated
             - Status: **passed**
-
   production-approval:
     needs:
       - staging-validation
@@ -159,7 +142,6 @@ jobs:
             - Approvers: Release Manager, Security, Application Owner
             - Change ticket: ${{ inputs.change_ticket }}
             - Decision: **approved** (simulated for demo)
-
   deploy-production:
     needs:
       - production-approval
@@ -168,7 +150,6 @@ jobs:
     with:
       manifest: ${{ inputs.manifest }}
       environment: ${{ job.environment }}
-
   release-evidence:
     needs:
       - deploy-production
