@@ -104,7 +104,6 @@ jobs:
             - **Result:** `PASS`
             - **Enforcement:** `BLOCK`
             - **Target:** `Production`
-            - **Release:** `${{ inputs.release-version }}`
   
             The release met the centrally configured Production
             coverage requirement and is eligible to continue.
