@@ -67,7 +67,7 @@ jobs:
 
   production-coverage-policy:
     needs: 
-    -  governance-review 
+      - governance-review 
     steps:
       - name: Evaluate production coverage policy
         id: coverage-policy
@@ -115,7 +115,7 @@ jobs:
 
   deploy-staging:
     needs:
-      - governance-review
+      - production-coverage-policy
     environment: staging
     uses: ./.cloudbees/workflows/deployer.yaml
     with:
