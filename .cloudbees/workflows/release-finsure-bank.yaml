@@ -66,6 +66,7 @@ jobs:
             - Audit evidence: **complete**
 
       - name: Evaluate production coverage policy
+        uses: docker://alpine:3.20
         id: coverage-policy
         run: |
           set -e
