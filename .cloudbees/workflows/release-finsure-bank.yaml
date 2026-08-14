@@ -65,49 +65,49 @@ jobs:
             - Unit tests / security scans / approvals: verified
             - Audit evidence: **complete**
 
-    - name: Evaluate production coverage policy
-      id: coverage-policy
-      run: |
-        set -e
-
-        ACTUAL_COVERAGE="87.4"
-        REQUIRED_COVERAGE="${{ vars.MIN_PROD_COVERAGE }}"
-
-        echo "========================================"
-        echo "Production Test Coverage Policy"
-        echo "========================================"
-        echo "Actual coverage:   ${ACTUAL_COVERAGE}%"
-        echo "Required coverage: ${REQUIRED_COVERAGE}%"
-        echo
-
-        if awk "BEGIN {exit !(${ACTUAL_COVERAGE} >= ${REQUIRED_COVERAGE})}"; then
-          echo "POLICY RESULT: PASS"
-        else
-          echo "POLICY RESULT: FAIL"
+      - name: Evaluate production coverage policy
+        id: coverage-policy
+        run: |
+          set -e
+  
+          ACTUAL_COVERAGE="87.4"
+          REQUIRED_COVERAGE="${{ vars.MIN_PROD_COVERAGE }}"
+  
+          echo "========================================"
+          echo "Production Test Coverage Policy"
+          echo "========================================"
+          echo "Actual coverage:   ${ACTUAL_COVERAGE}%"
+          echo "Required coverage: ${REQUIRED_COVERAGE}%"
           echo
-          echo "Production promotion is blocked."
-          echo "Coverage ${ACTUAL_COVERAGE}% is below the required ${REQUIRED_COVERAGE}%."
-          exit 1
-        fi
-
-    - name: Publish production coverage policy evidence
-      uses: cloudbees-io/publish-evidence-item@v1
-      with:
-        content: |-
-          # Production Coverage Policy
-
-          **Policy:** Minimum test coverage for Production
-
-          - **Required coverage:** `${{ vars.MIN_PROD_COVERAGE }}%`
-          - **Actual coverage:** `87.4%`
-          - **Result:** `PASS`
-          - **Enforcement:** `BLOCK`
-          - **Target:** `Production`
-          - **Release:** `${{ inputs.release-version }}`
-
-          The release met the centrally configured Production
-          coverage requirement and is eligible to continue.
-        format: MARKDOWN            
+  
+          if awk "BEGIN {exit !(${ACTUAL_COVERAGE} >= ${REQUIRED_COVERAGE})}"; then
+            echo "POLICY RESULT: PASS"
+          else
+            echo "POLICY RESULT: FAIL"
+            echo
+            echo "Production promotion is blocked."
+            echo "Coverage ${ACTUAL_COVERAGE}% is below the required ${REQUIRED_COVERAGE}%."
+            exit 1
+          fi
+  
+      - name: Publish production coverage policy evidence
+        uses: cloudbees-io/publish-evidence-item@v1
+        with:
+          content: |-
+            # Production Coverage Policy
+  
+            **Policy:** Minimum test coverage for Production
+  
+            - **Required coverage:** `${{ vars.MIN_PROD_COVERAGE }}%`
+            - **Actual coverage:** `87.4%`
+            - **Result:** `PASS`
+            - **Enforcement:** `BLOCK`
+            - **Target:** `Production`
+            - **Release:** `${{ inputs.release-version }}`
+  
+            The release met the centrally configured Production
+            coverage requirement and is eligible to continue.
+          format: MARKDOWN            
 
   deploy-staging:
     needs:
