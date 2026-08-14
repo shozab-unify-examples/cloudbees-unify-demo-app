@@ -89,7 +89,10 @@ jobs:
             echo "Coverage ${ACTUAL_COVERAGE}% is below the required ${REQUIRED_COVERAGE}%."
             exit 1
           fi
-  
+  production-coverage-policy:
+    needs: 
+    -  governance-review 
+    steps:
       - name: Publish production coverage policy evidence
         uses: cloudbees-io/publish-evidence-item@v1
         with:
